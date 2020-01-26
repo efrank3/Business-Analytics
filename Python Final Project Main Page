@@ -1,0 +1,21 @@
+
+#Run the webscraping function and print results
+from Utilities import webscraping  
+m,y,x,z = webscraping()  
+print(m,y,x,z)  
+
+  
+#Run the mcu_list function to create the data frame and print the results
+from Utilities import mcu_list  
+df_mcu = mcu_list()   
+print(df_mcu)  
+
+  
+#Run the group_by function and print the results
+from Utilities import group_by  
+df_group = group_by()     
+print(df_group)  
+
+#Run the MCU plot function and display the graph
+from Utilities import mcu_plot  
+rating_revenue_plot = mcu_plot() 
