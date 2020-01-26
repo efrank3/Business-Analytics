@@ -1,0 +1,129 @@
+
+#Import BeautifulSoup and requests to perform Webscraping
+from bs4 import BeautifulSoup
+import requests
+#Create the webscraping function
+def webscraping():
+#Create movie list
+    movie_list = []
+#Assign the webpage that will be scraped to the page variable
+    page = 'https://www.imdb.com/list/ls040671689/'  
+    response = requests.get(page)  
+    html_doc = response.content  
+    soup = BeautifulSoup(html_doc, "lxml")  
+#Assign the content to be scraped to the movies variable
+    movies = soup.find_all('div',class_="lister-item-content")  
+#Loop through each movie and storing the movie titles into the movie list
+    for movie in movies:  
+        try:  
+            title = movie.find('a').text  
+            movie_list.append([title])  
+        except:  
+                continue    
+#Remove Spiderman: Far From Home because the data on the website is incomplete            
+    del movie_list[7]   
+ 
+
+#Create a revenue list
+    revenue_list = [] 
+#Assign the content to be scraped to the revenue variable
+    revenue = soup.find_all('div',class_="list-description")
+#Loop through each movie and storing the gross revenue into the revenue list
+    for money in revenue:  
+        try:  
+            revenues = money.find('p').text  
+            #Clean the revenue while its being scraped
+            revenues = revenues.split("=")[1].strip().replace("$","").replace(",","").replace(".","")  
+            revenue_list.append([revenues])  
+        except:  
+            continue    
+
+  
+#Create a rating list
+    ratings_list = []
+#Assign the content to be scraped to the revenue variable
+    rating = soup.find_all('div',class_="lister-item-content") 
+#Loop through each movie and storing the ratings into the rating list
+    for score in rating:  
+        try:  
+            ratings = score.find('span', class_="ipl-rating-star__rating").text  
+            ratings_list.append([ratings])  
+        except:  
+            continue    
+#Remove Spiderman: Far From Home because the data on the website is incomplete 
+    del ratings_list[7]  
+
+#Create a year list
+    year_list = [] 
+#Assign the content to be scraped to the revenue variable
+    years = soup.find_all('div',class_="lister-item-content")
+#Loop through each movie and storing the release year into the year list
+    for number in years:  
+        try:  
+            year = number.find('span', class_="lister-item-year text-muted unbold").text  
+            year_list.append([year])  
+        except:  
+            continue  
+
+#Remove Spiderman: Far From Home because the data on the website is incomplete
+    del year_list[7]  
+
+    return movie_list, year_list, ratings_list, revenue_list
+
+#Store each list into a different variable
+m,y,x,z = webscraping()
+
+import pandas as pd    
+import numpy as np   
+
+#Creating a data frame from the 4 variables scraped 
+
+def mcu_list ():  
+
+    # Assigning column names to scraped variables 
+    mcu_list = pd.DataFrame(np.column_stack([m, y, x, z]),columns = ['Movie', 'Year','Rating','Revenue'])        
+    # Assigning data type to columns of data 
+    mcu_list = mcu_list.astype({"Movie": str, "Year": str, "Rating": float, "Revenue": 'int64'})         
+
+    return mcu_list   
+
+df_mcu = mcu_list()   
+
+  
+# applying groupby() function to       
+# group the data by Year.       
+
+def group_by():  
+    df_group1 = df_mcu.groupby('Year').mean()   
+    # show the average rating and revenue by Year  
+    df_group1 = df_group1.reset_index()     
+    df_group1 = df_group1.astype({"Year": str, "Rating": float, "Revenue": 'int64'})  
+    # Change Data Types on the Group By 
+
+    return df_group1  
+
+df_group = group_by()     
+  
+
+# Creating a plot with three variables that inlcude Year on the x-axis 
+# and Rating and Revenue on the y-axis 
+from matplotlib import pyplot as plt       
+
+def mcu_plot():  
+    x = df_group.Year  
+    y1 = df_group.Rating  
+    y2 = df_group.Revenue  
+    fig, ax1 = plt.subplots()  
+    ax2 = ax1.twinx()  
+    ax1.plot(x, y1, 'g-') # Change Rating line to color Green 
+    ax2.plot(x, y2, 'b-') # Change Revenue line to color Blue  
+
+
+    # Labels for our variables 
+    ax1.set_xlabel('Year')  
+    ax1.set_ylabel('Average Rating', color='g')  
+    ax2.set_ylabel('Average Revenue (in billions)', color='b')
+    ax1.set_xticks(x[::2])
+
+
+    return plt.show() 
